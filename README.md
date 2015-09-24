@@ -8,7 +8,6 @@ Slides and Source Code from "Demystifying Floating Point Numbers" given at CPPCo
 * IEEE Double Format - 1 sign, 11 exponent, 52 fraction
 * Has several rounding options (Java only permits "Round to Nearest")
 * Do not test for equality
-* SSE and SSE2 may be too underspecified to be deterministic
 * Order of operations matters
 * The relative magnitudes of numbers involved in a computataion matters
 * Prefer to multiply, add, and subtract - divide only when necessary
@@ -24,17 +23,19 @@ Slides and Source Code from "Demystifying Floating Point Numbers" given at CPPCo
 * [Floating Point Comparison](http://floating-point-gui.de/errors/comparison/)
 * [Floating Point Determinisim](http://www.gamedev.net/topic/499435-floating-point-determinism/)
 * [Floating point number representation](http://www.cprogramming.com/tutorial/floating_point/understanding_floating_point_representation.html)
+* [Floating Point Operations and Streaming SIMD Extensions](https://www.cs.fsu.edu/~engelen/courses/HPC-adv/FP.pdf)
+* [Floating Point Representation](http://pages.cs.wisc.edu/~markhill/cs354/Fall2008/notes/flpt.apprec.html)
 * [Floating Point](http://www.tfinley.net/notes/cps104/floating.html)
 * [IEEE 754 Converter](http://www.h-schmidt.net/FloatConverter/IEEE754.html)
 * [IEEE floating-point exceptions in C++](http://www.johndcook.com/blog/ieee_exceptions_in_cpp/)
 * [Is floating  point math deterministic?](http://blogs.msdn.com/b/shawnhar/archive/2009/03/25/is-floating-point-math-deterministic.aspx)
 * [Is Your Model Susceptible to Floating-Point Errors?](http://jasss.soc.surrey.ac.uk/9/4/4.html)
+* [Lecture Notes on the Status of IEEE 754, Kahan, October 1, 1997](http://www.cs.berkeley.edu/~wkahan/ieee754status/IEEE754.PDF)
 * [Mathematics in Video Games](http://www.gamasutra.com/view/feature/131605/mathematics_in_videogames.php)
+* [Miscalculating Area and Angles of a Needle-like Triangle](https://www.cs.berkeley.edu/~wkahan/Triangle.pdf)
 * [Visualizing Floats](http://www.gamasutra.com/view/feature/1965/visualizing_floats.php?print=1)
 * [We Really Don't Know How To Compute!](http://www.infoq.com/presentations/We-Really-Dont-Know-How-To-Compute)
 * [What Every Computer Scientist Should Know About Floating-Point Arithmetic](http://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html)
-* [Lecture Notes on the Status of IEEE 754, Kahan, October 1, 1997](http://www.cs.berkeley.edu/~wkahan/ieee754status/IEEE754.PDF)
-* [https://www.cs.fsu.edu/~engelen/courses/HPC-adv/FP.pdf](https://www.cs.fsu.edu/~engelen/courses/HPC-adv/FP.pdf)
 
 ##General Offline References
 * Hacker's Delight, (Warren)
@@ -48,6 +49,12 @@ https://msdn.microsoft.com/library/aa289157.aspx
 
 ####Compiler Flags
 * /fp:[precise | except[-] | fast | strict ]
+
+####Pragmas
+* float_control( value,setting [push] | push | pop )
+* fenv_access [ON | OFF]
+* fp_contract [ON | OFF]
+
 
 ###GCC
 [Math_Optimization_Flags](https://gcc.gnu.org/wiki/Math_Optimization_Flags)

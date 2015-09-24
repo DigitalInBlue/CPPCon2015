@@ -3,6 +3,11 @@
 #include <fstream>
 #include <stdint.h>
 #include <bitset>
+#include <cmath>
+
+#ifndef WIN32
+	#define WIN32 0
+#endif
 
 /// Use to find out the binary representation of a float.
 typedef union 
@@ -34,10 +39,21 @@ typedef union
 	uint64_t raw;
 } ieeeDouble;
 
+/// Format nice output for google test.
+std::ostream& cppCon(const int widthMult = 2)
+{
+	std::cerr << std::left << "[  CPPCON  ] " << ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name() << ".";
+	std::cerr << ::testing::UnitTest::GetInstance()->current_test_info()->name() << " -- ";
+	std::cerr << std::fixed << std::right;
+	std::cerr << std::setw(std::numeric_limits<double>::digits10 * widthMult) << std::setprecision(std::numeric_limits<double>::digits10 * widthMult);
+	return std::cerr;
+}
+
 /// Heron's formula to compute the area of a triangle.
 template<typename T> T HeronsFormula(const T a, const T b, const T c)
 {
-	const auto s = (a + b + c) / T(2);
+	const auto s = ((a + b) + c) / 2;
+	cppCon() << "S = " << s << "\n";
 	const auto num = s * (s - a) * (s - b) * (s - c);
 	const auto area = std::sqrt(num);
 	return area;
@@ -50,34 +66,6 @@ template<typename T> T KahansFormula(const T a, const T b, const T c)
 	const auto num = (a + (b + c)) * (c - (a - b)) * (c + (a - b)) * (a + (b - c));
 	const auto area = std::sqrt(num) / T(4);
 	return area;
-}
-
-/// Format nice output for google test.
-std::ostream& cppCon(const int widthMult = 2)
-{
-	std::cerr << std::left << "[  CPPCON  ] " << ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name() << ".";
-	std::cerr << ::testing::UnitTest::GetInstance()->current_test_info()->name() << " -- ";
-	std::cerr << std::fixed << std::right;
-	std::cerr << std::setw(std::numeric_limits<double>::digits10 * widthMult) << std::setprecision(std::numeric_limits<double>::digits10 * widthMult);
-	return std::cerr;
-}
-
-/// Fast reciprocal square root approximation for x > 0.25
-inline float FastInvSqrt(float x)
-{
-	int tmp = ((0x3f800000 << 1) + 0x3f800000 - *(long*)&x) >> 1;
-	auto y = *(float*)&tmp;
-	return y * (1.47f – 0.47f * x * y * y);
-}
-
-/// Fast square root approximation
-inline float FastSqrt(float x)
-{
-	auto t = *(int*)&x;
-	t -= 0x3f800000;
-	t >>= 1;
-	t += 0x3f800000;
-	return *(float*)&t;
 }
 
 /// How is Pi stored?
@@ -107,6 +95,7 @@ TEST(CPPCon2015, pi)
 }
 
 /// How is Pi stored?
+#if(WIN32 && _MSC_VER > 1700) 
 TEST(CPPCon2015, piNext)
 {
 	ieeeFloat floatPi;
@@ -122,7 +111,7 @@ TEST(CPPCon2015, piNext)
 	}
 	
 	// Get the next float after PI in the direction of 3.0.
-	floatPi.number = nextafterf(floatPi.number, 3.0);
+	floatPi.number = std::nextafterf(floatPi.number, 3.0);
 
 	cppCon() << "Float Pi Next: " << floatPi.number << "\n";
 
@@ -133,6 +122,7 @@ TEST(CPPCon2015, piNext)
 		cppCon() << "Float Pi Next: [" << sign << "][" << exponent << "][" << mantisa << "]\n";
 	}
 }
+#endif
 
 /// 0.1 + 0.2 == 0.3...never
 TEST(CPPCon2015, pointOnePlusPointTwo)
@@ -220,6 +210,7 @@ TEST(CPPCon2015, verySmalll)
 	}
 }
 
+#if(WIN32 && _MSC_VER > 1700) 
 /// How is 0.1f stored?
 TEST(CPPCon2015, special)
 {
@@ -254,6 +245,7 @@ TEST(CPPCon2015, special)
 		cppCon() << "INFINITY: [" << sign << "][" << exponent << "][" << mantisa << "]\n";
 	}
 }
+#endif
 
 /// Simulation time, accumulating at 100 Hz
 TEST(CPPCon2015, simTime100HzFloatAccumulate)
@@ -541,36 +533,36 @@ TEST(CPPCon2015, simTimeFromTheWild)
 	cppCon() << simTime60000Frames << " != " << simTime << " (" << simTime60000Frames - simTime << ")\n";
 }
 
-/// Simulation time, accumulating at 100 Hz
-TEST(CPPCon2015, simTimeSubMicrosecondDoubleDelta)
+/// Simulation time, accumulating at sub-microseconds using floats.
+TEST(CPPCon2015, simTimeSubMicrosecondFloatDelta)
 {
-	auto totalFrames = size_t(0);
-	auto frameLength = 0.0000000001;
-	auto simTime = 0.0;
+	auto totalFrames = 0e0f;
+	auto frameLength = 1.2345e-6f;
+	auto simTime = 0.0f;
 
-	// Run 120 Frames
-	auto simTime120000000Frames = 1.20;
-	totalFrames = 12000000000;
-	simTime = totalFrames * frameLength;
-	EXPECT_EQ(simTime120000000Frames, simTime);
+	for(; totalFrames < 12000; totalFrames++)
+	{
+		simTime += frameLength;
+	}
 
-	// Run 1200 Frames
-	auto simTime1200000000Frames = 12.00;
-	totalFrames = 120000000000;
+	// Run 10.0e3 Frames
+	auto simTime10e3Frames = 1.2345e-2f;
+	for(; totalFrames < 10e3f; totalFrames++)
+	{
+		simTime += frameLength;
+	}
 	simTime = totalFrames * frameLength;
-	EXPECT_EQ(simTime1200000000Frames, simTime);
+	EXPECT_EQ(simTime10e3Frames, simTime);
+	cppCon() << simTime10e3Frames << " != " << simTime << " (" << simTime10e3Frames - simTime << ")\n";
 
-	// Run 12000 Frames
-	auto simTime12000000000Frames = 120.0;
-	totalFrames = 1200000000000;
-	simTime = totalFrames * frameLength;
-	EXPECT_EQ(simTime12000000000Frames, simTime);
-
-	// Run 600000 Frames
-	auto simTime60000000000Frames = 600.0;
-	totalFrames = 6000000000000;
-	simTime = totalFrames * frameLength;
-	EXPECT_EQ(simTime60000000000Frames, simTime);
+	// Run 10.0e6 Frames
+	auto simTime10e6Frames = 12.345f;
+	for(; totalFrames < 10e6; totalFrames++)
+	{
+		simTime += frameLength;
+	}
+	EXPECT_EQ(simTime10e6Frames, simTime);
+	cppCon() << simTime10e6Frames << " != " << simTime << " (" << simTime10e6Frames - simTime << ")\n";
 }
 
 TEST(CPPCon2015, Inverse1)
@@ -601,11 +593,12 @@ TEST(CPPCon2015, Inverse2)
 
 /// Area of a triangle
 /// From http://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
+/// From https://www.cs.berkeley.edu/~wkahan/Triangle.pdf
 TEST(CPPCon2015, AreaOfATriangleFloat)
 {
-	const auto a = 9.0f;
-	const auto b = 4.53f;
-	const auto c = 4.53f;
+	const auto a = 100000.0f;
+	const auto b = 99999.99979f;
+	const auto c = 0.00029f;
 
 	ASSERT_TRUE(a >= b);
 	ASSERT_TRUE(b >= c);
@@ -613,16 +606,19 @@ TEST(CPPCon2015, AreaOfATriangleFloat)
 	auto heronsFormula = HeronsFormula(a, b, c);
 	auto kahansFormula = KahansFormula(a, b, c);
 	EXPECT_NE(kahansFormula, heronsFormula);
-	cppCon() << kahansFormula << " vs. " << heronsFormula << " (" << kahansFormula - heronsFormula << ")\n";
+	cppCon() << "Heron: " << heronsFormula << "\n";
+	cppCon() << "Kahan: " << kahansFormula << "\n";
+	cppCon() << "delta: " << kahansFormula - heronsFormula << "\n";
 }
 
 /// Area of a triangle
 /// From http://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
+/// From https://www.cs.berkeley.edu/~wkahan/Triangle.pdf
 TEST(CPPCon2015, AreaOfATriangleDouble)
 {
-	const auto a = 9.0;
-	const auto b = 4.53;
-	const auto c = 4.53;
+	const auto a = 100000.0;
+	const auto b = 99999.99979;
+	const auto c = 0.00029;
 
 	ASSERT_TRUE(a >= b);
 	ASSERT_TRUE(b >= c);
@@ -647,6 +643,7 @@ TEST(CPPCon2015, xkcd)
 	EXPECT_NEAR(20.0, std::pow(e, pi) - pi, 0.001);
 }
 
+#if(WIN32 && _MSC_VER > 1700) 
 TEST(CppCon2015, next)
 {
 	auto max = 10.0f;
@@ -664,4 +661,21 @@ TEST(CppCon2015, next)
 			start = f;
 		}
 	}
+}
+#endif
+
+TEST(CppCon2015, radian)
+{
+	const auto oneRadian = 0.15915494309f;
+	const auto control = 0.000000000015915494309f;
+
+	const auto oneRadianMultiplied = oneRadian * 1.0e-10f;
+	const auto oneRadianDivided = oneRadian / 1.0e10f;
+
+	cppCon() << "Control: " << control << "\n";
+	cppCon() << "x*1.0e-10f: " << oneRadianMultiplied << "(" << fabs(oneRadianMultiplied - control) << ")\n";
+	cppCon() << "x/1.0e10f: " << oneRadianDivided << "(" << fabs(oneRadianDivided - control) << ")\n";
+	cppCon() << "Relative Error: " << fabs(oneRadianDivided - control) / control << "\n";
+
+	EXPECT_EQ(oneRadianDivided, oneRadianMultiplied);
 }
